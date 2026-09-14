@@ -1,0 +1,28 @@
+bin/
+obj/
+/packages/
+.idea/
+*.iml
+*.DotSettings
+*.DotSettings.user
+/_ReSharper.Caches/
+*.suo
+*.user
+*.userosscache
+.vs/
+*.log
+out/
+.Test
+.env
+
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
