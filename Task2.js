@@ -16,8 +16,8 @@ let cachingDecorator = (func, hashFn) => {
         hashFn = (...args) => [].join.call(args)
     }
 
-    let resultFunc = function () {
-        let key = hashFn(arguments)
+    let wrapper = function () {
+        let key = hashFn(...arguments)
 
         if (cache.has(key)) {
             console.log("Returned from cache")
@@ -30,11 +30,11 @@ let cachingDecorator = (func, hashFn) => {
         return result
     }
 
-    resultFunc.clearCache = () => {
+    wrapper.clearCache = () => {
         this.cache = new Map()
     }
 
-    return resultFunc
+    return wrapper
 }
 
 orderService.calculateTotal = cachingDecorator(orderService.calculateTotal)
@@ -49,15 +49,19 @@ console.log("--- 2 ---")
 
 const spyDecorator = (func) => {
     calls = []
-
-    return function() {
+    
+    let wrapper = function() {
         calls.push({
-            arguments,
+            args: [...arguments],
             timestamp: new Date()
         })
 
         return func.apply(this, arguments)
     }
+    
+    wrapper.calls = calls
+    
+    return wrapper
 }
 
 function sendEmail(to, subject) {
@@ -72,3 +76,60 @@ spiedSendEmail('admin@test.com', 'Звіт за день')
 console.log(spiedSendEmail.calls.length) // 2
 console.log(spiedSendEmail.calls[0].args) // ['user@test.com', 'Вітаємо!']
 console.log(spiedSendEmail.calls[0].timestamp) // рядок з датою або Date
+
+/*// 3
+console.log("--- 3 ---")
+
+const delayDecorator = (func, ms) => {
+    return function() {
+        setTimeout(() => func(...arguments), ms)
+    }
+}
+
+function logAction(action, target) {
+    console.log(`[${this?.role || 'Гість'}] Дія: ${action}, ціль: ${target}`)
+}
+
+const user = {
+    role: 'Модератор',
+    logAction: delayDecorator(logAction, 1500)
+}
+
+user.logAction('Блокування', 'User #42')
+// Через 1.5 секунди виведе: [Модератор] Дія: Блокування, ціль: User #42*/
+
+// 4
+console.log("--- 4 ---")
+
+const debounceDecorator = (func, wait) => {
+    let timerId
+
+    let wrapper = function() {
+        if (timerId) {
+            clearTimeout(timerId)
+        }
+
+        timerId = setTimeout(() => func(...arguments), wait)
+    }
+
+    wrapper.cancel = () => {
+        clearTimeout(timerId)
+    }
+
+    return wrapper
+}
+
+function onSearchInput(query) {
+    console.log(`Пошуковий запит відправлено: ${query}`)
+}
+
+const debouncedSearch = debounceDecorator(onSearchInput, 2000)
+
+debouncedSearch('j')
+debouncedSearch('jav')
+debouncedSearch('javas')
+debouncedSearch('javascript')
+
+setTimeout(() => debouncedSearch.cancel(), 3000)
+
+debouncedSearch('javascript language')
